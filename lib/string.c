@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #ifdef LIB_STRING_DEBUG
-#include  <stdio.h>
+#include <stdio.h>
 #define SPRINTF(fmt, args...) printf(fmt, ##args)
 #else
 #define SPRINTF(fmt, args...)
@@ -13,7 +13,8 @@ size_t str_len(const char *src)
 {
     const char *iter;
 
-    for (iter = src; *iter; iter++);
+    for (iter = src; *iter; iter++)
+        ;
 
     return iter - src;
 }
@@ -22,7 +23,8 @@ size_t str_n_len(const char *src, size_t count)
 {
     const char *iter;
 
-    for (iter = src; *iter && count; iter++, count--);
+    for (iter = src; *iter && count; iter++, count--)
+        ;
 
     return iter - src;
 }
@@ -91,7 +93,8 @@ char *str_cat(char *dst, const char *src)
 {
     char *iter;
 
-    for (iter = dst; *iter; iter++);
+    for (iter = dst; *iter; iter++)
+        ;
 
     while ((*iter = *src) != '\0') {
         iter++;
@@ -106,7 +109,8 @@ char *str_n_cat(char *dst, const char *src, size_t count)
     char *iter;
     size_t n = 0;
 
-    for (iter = dst; *iter; iter++);
+    for (iter = dst; *iter; iter++)
+        ;
 
     while (n < count && (*iter = *src)) {
         iter++;
@@ -134,16 +138,16 @@ char *str_str_kmp(const char *haystack, const char *needle)
 
     SPRINTF("next[0]: %d\n", next[0]);
     for (int i = 1, j = 0; i < needle_len; i++) {
-       while (j > 0 && needle[i] != needle[j]) {
-           j = next[j - 1];
-       }
+        while (j > 0 && needle[i] != needle[j]) {
+            j = next[j - 1];
+        }
 
-       if (needle[i] == needle[j]) {
-           next[i] = j + 1;
-           j++;
-       }
+        if (needle[i] == needle[j]) {
+            next[i] = j + 1;
+            j++;
+        }
 
-       SPRINTF("next[%d]: %d\n", i, next[i]);
+        SPRINTF("next[%d]: %d\n", i, next[i]);
     }
 
     // find
@@ -152,12 +156,14 @@ char *str_str_kmp(const char *haystack, const char *needle)
     while (i < haystack_len) {
         if (needle[j] == haystack[i]) {
             i++;
-            j++;     
+            j++;
         } else {
-            if (!j) i++;
-            else j = next[j - 1];
+            if (!j)
+                i++;
+            else
+                j = next[j - 1];
         }
-    
+
         if ('\0' == needle[j]) {
             result = (char *)&haystack[i - needle_len];
 
@@ -180,7 +186,8 @@ char *str_str(const char *haystack, const char *needle)
     q = needle;
     while (*p) {
         int i = 0;
-        while (q[i] && q[i] == p[i]) i++;
+        while (q[i] && q[i] == p[i])
+            i++;
         if (q[i] == '\0')
             return (char *)p;
         p++;
@@ -245,7 +252,7 @@ void *mem_set(void *src, int c, size_t count)
     return src;
 }
 
-int mem_cmp(const void* dst, const void* src, size_t count)
+int mem_cmp(const void *dst, const void *src, size_t count)
 {
     const uint8_t *s, *d;
 

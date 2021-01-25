@@ -5,19 +5,14 @@
 
 int main(void)
 {
-    struct sokoban_map base_map = {
-        .length = LENTH,
-        .width = WIDTH,
-        .map = NULL
-    };
+    struct sokoban_map base_map = { .length = LENTH,
+                                    .width = WIDTH,
+                                    .map = NULL };
     struct human player = {
         .x = HUMAN_INIT_X,
         .y = HUMAN_INIT_Y,
     };
-    struct sokoban_box box_a = {
-        .x = box_x,
-        .y = box_y
-    };
+    struct sokoban_box box_a = { .x = box_x, .y = box_y };
 
     init_map(&base_map);
 
@@ -29,8 +24,7 @@ int main(void)
         base_map.map[box_a.x][box_a.y] = 3;
         for (int x = 0; x < base_map.length; x++) {
             for (int y = 0; y < base_map.width; y++) {
-                switch (base_map.map[x][y])
-                {
+                switch (base_map.map[x][y]) {
                 case 0:
                     printf("  ");
 
@@ -40,7 +34,7 @@ int main(void)
                     printf(" ▣");
 
                     break;
-                
+
                 case 2:
                     printf(" ♀");
 
@@ -50,21 +44,19 @@ int main(void)
                     printf(" ▤");
 
                     break;
-
                 }
             }
             printf("\n");
         }
 
-        // FIXME 
+        // FIXME
         int move = getchar();
         int ret = human_move(&base_map, &player, move);
         if (ret == 1) {
             goto end;
-
         }
     }
-    
+
 end:
     free_map(&base_map);
 

@@ -7,7 +7,7 @@ void init_map(struct sokoban_map *sm)
 {
     if (heap_init())
         return;
-        
+
     if (!sm->map) {
         sm->map = (int **)my_malloc(sizeof(*sm->map) * sm->length);
 
@@ -22,12 +22,11 @@ void init_map(struct sokoban_map *sm)
                 continue;
             }
             sm->map[x][y] = 0;
-            
         }
     } //
 }
 
-void free_map(struct sokoban_map *sm) 
+void free_map(struct sokoban_map *sm)
 {
     for (int i = 0; i < sm->length; i++)
         my_free(sm->map[i]);
