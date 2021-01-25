@@ -4,10 +4,10 @@
 #include "types.h"
 
 struct stack_node {
-    struct list_head __node; 
+    struct list_head __node;
 };
 
-#define stack_top_container_of(stack, type, mem) \
+#define stack_top_container_of(stack, type, mem)                               \
     container_of(stack_top(stack), type, mem)
 
 static inline void stack_init(struct stack_node *stack)

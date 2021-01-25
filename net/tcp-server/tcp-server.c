@@ -13,15 +13,14 @@
 #define bzero(addr, size) memset(addr, 0, size)
 #define BUFFER_SIZE 1024
 
-#define ERR_BIND   1
+#define ERR_BIND 1
 #define ERR_LISTEN 2
-
 
 static void *tcp_server_handle(void *args)
 {
     int client_fd = *(int *)args;
     uint8_t buff[BUFFER_SIZE];
-    
+
     for (;;) {
         int n = recv(client_fd, buff, BUFFER_SIZE, 0);
 
@@ -66,8 +65,8 @@ static int tcp_server_run(char *ip)
     socklen_t client_addr_size = sizeof(client_addr);
 
     for (;;) {
-        int client_socket = accept(server_socket, (struct sockaddr *)&client_addr,
-                            &client_addr_size);
+        int client_socket = accept(
+            server_socket, (struct sockaddr *)&client_addr, &client_addr_size);
 
         pthread_t tid;
         pthread_create(&tid, NULL, tcp_server_handle, &client_socket);
@@ -78,7 +77,8 @@ static int tcp_server_run(char *ip)
     return 0;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     return tcp_server_run(argv[1]);
 }
 
@@ -148,8 +148,8 @@ static __UNUSED__ uint16_t test_1  = 0x1122;
 #define MR_PERMISSION_RO 0
 #define MR_PERMISSION_RW 1
 
-#define MR_DT_UINT8      0
-#define MR_DT_UINT16     1
+#define MR_DT_UINT8 0
+#define MR_DT_UINT16 1
 
 struct modbus_register {
     uint16_t addr;
@@ -174,7 +174,7 @@ struct modbus_register mr_list[] = {
     },
 };
 
-#define M_OK      0
+#define M_OK 0
 #define M_ERR_CRC 1
 #define M_ERR_ADR 2
 #define M_ERR_OPE 3
@@ -221,4 +221,3 @@ static int modbus_handle(int client_fd, const uint8_t *datagram, uint32_t len)
     return M_OK;
 }
 #endif
-

@@ -1,7 +1,6 @@
 #pragma once
 
-struct sokoban_box
-{
+struct sokoban_box {
     int x;
     int y;
 };
