@@ -10,7 +10,6 @@
 
 #define __UNUSED__ __attribute__((unused))
 
-#define bzero(addr, size) memset(addr, 0, size)
 #define BUFFER_SIZE 1024
 
 #define ERR_BIND 1
@@ -48,8 +47,8 @@ static int tcp_server_run(char *ip)
     struct sockaddr_in si;
     char buff[BUFFER_SIZE];
 
-    bzero(&si, sizeof(si));
-    bzero(buff, sizeof(buff));
+    memset(&si, 0, sizeof(si));
+    memset(buff, 0, sizeof(buff));
     si.sin_family = PF_INET;
     si.sin_addr.s_addr = inet_addr(ip);
     si.sin_port = htons(55555);
@@ -61,7 +60,7 @@ static int tcp_server_run(char *ip)
         return ERR_LISTEN;
 
     struct sockaddr_in client_addr;
-    bzero(&client_addr, sizeof(client_addr));
+    memset(&client_addr, 0, sizeof(client_addr));
     socklen_t client_addr_size = sizeof(client_addr);
 
     for (;;) {

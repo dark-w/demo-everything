@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "types.h"
+
 #include "sokoban.h"
 
 int main(void)
@@ -17,8 +19,7 @@ int main(void)
     init_map(&base_map);
 
     while (1) {
-        int r = system("clear");
-        r = r; // FIXME: result valve unused warning
+        __UNUSED__ int r = system("clear");
 
         base_map.map[player.x][player.y] = 2;
         base_map.map[box_a.x][box_a.y] = 3;
