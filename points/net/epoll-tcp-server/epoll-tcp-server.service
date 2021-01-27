@@ -1,0 +1,8 @@
+[Unit]
+Description=TCP epoll server
+
+[Service]
+ExecStart=/opt/epoll-tcp-server/epoll-tcp-server 172.16.6.17
+
+[Install]
+WantedBy=multi-user.target
