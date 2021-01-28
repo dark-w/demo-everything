@@ -19,8 +19,12 @@
 
 #define MAX_EVENTS 10
 
-static void tcp_server_handle(int client_fd)
+static int epollfd;
+
+static void tcp_server_handle(struct epoll_event ee)
 {
+    int client_fd = ee.data.fd;
+
     uint8_t buff[BUFFER_SIZE];
 
     int n = recv(client_fd, buff, BUFFER_SIZE, 0);
@@ -39,6 +43,10 @@ static void tcp_server_handle(int client_fd)
     return;
 
 POWER_OFF:
+    if (epoll_ctl(epollfd, EPOLL_CTL_DEL, client_fd, &ee) == -1) {
+        perror("epoll_ctl: client_fd");
+        exit(EXIT_FAILURE);
+    }
     close(client_fd);
     return;
 }
@@ -46,7 +54,7 @@ POWER_OFF:
 static int tcp_server_run(char *ip)
 {
     struct epoll_event ev, events[MAX_EVENTS];
-    int listen_sock, conn_sock, nfds, epollfd;
+    int listen_sock, conn_sock, nfds;
 
     /* Code to set up listening socket, 'listen_sock',
        (socket(), bind(), listen()) omitted */
@@ -109,19 +117,24 @@ static int tcp_server_run(char *ip)
                     // handle the error.  By the way, I've never seen fcntl fail in this way
                 }
 
-                ev.events = EPOLLIN | EPOLLET;
-                ev.data.fd = conn_sock;
-                if (epoll_ctl(epollfd, EPOLL_CTL_ADD, conn_sock, &ev) == -1) {
+                struct epoll_event ee;
+                ee.events = EPOLLIN | EPOLLET;
+                ee.data.fd = conn_sock;
+                if (epoll_ctl(epollfd, EPOLL_CTL_ADD, conn_sock, &ee) == -1) {
                     perror("epoll_ctl: conn_sock");
                     exit(EXIT_FAILURE);
                 }
             } else {
-                tcp_server_handle(events[n].data.fd);
+                tcp_server_handle(events[n]);
             }
         }
     }
 
-    //    close(listen_sock);
+    if (epoll_ctl(epollfd, EPOLL_CTL_DEL, listen_sock, &ev) == -1) {
+        perror("epoll_ctl: listen_sock");
+        exit(EXIT_FAILURE);
+    }
+    close(listen_sock);
     return 0;
 }
 
