@@ -1,2 +1,2 @@
-# sokoban
-i don't know what is this...
+# demo everything
+for now, i just know what it is.
