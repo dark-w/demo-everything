@@ -47,18 +47,18 @@ struct person {
 * 
 *  ----------
 */
-static int command_list_handle(const struct person *p)
+static int command_list_handle(const struct person *_person)
 {
     const char *line = "\n----------\n\n";
 
-    send(p->client_fd, line, strlen(line), 0);
+    send(_person->client_fd, line, strlen(line), 0);
     struct list_head *itr;
     list_for_each (itr, &g_id_list) {
         struct person *p = container_of(itr, struct person, person_node);
 
-        send(p->client_fd, p->id, strlen(p->id), 0);
+        send(_person->client_fd, p->id, strlen(p->id), 0);
     }
-    send(p->client_fd, line, strlen(line), 0);
+    send(_person->client_fd, line, strlen(line), 0);
 
     return CMD_HANDLE_RET_CONTINUE;
 }
@@ -76,7 +76,7 @@ static int command_list_handle(const struct person *p)
 #define ONLINE_REMIND 0
 #define OFFLINE_REMIND 1
 
-static void msg_broadcast_on_off_line(const struct person *p, int flag)
+static void msg_broadcast_on_off_line(const struct person *_p, int flag)
 {
     const char *online_remind_msg_base;
     if (ONLINE_REMIND == flag)
@@ -85,10 +85,10 @@ static void msg_broadcast_on_off_line(const struct person *p, int flag)
         online_remind_msg_base = " is leaving!\n";
 
     char *online_remind_msg =
-        (char *)malloc(strlen(online_remind_msg_base) + strlen(p->id) + 1);
+        (char *)malloc(strlen(online_remind_msg_base) + strlen(_p->id) + 1);
 
-    strcat(online_remind_msg, p->id);
-    online_remind_msg[strlen(p->id) - 1] = '\0'; /* del the '\n' */
+    strcat(online_remind_msg, _p->id);
+    online_remind_msg[strlen(_p->id) - 1] = '\0'; /* del the '\n' */
     strcat(online_remind_msg, online_remind_msg_base);
 
     printf("%s\n", online_remind_msg);
@@ -105,37 +105,37 @@ static void msg_broadcast_on_off_line(const struct person *p, int flag)
 
 /* command 'off' handle */
 /* warning: this function will free your memory of pointer p*/
-static int command_off_handle(struct person *p)
+static int command_off_handle(struct person *_p)
 {
-    msg_broadcast_on_off_line(p, OFFLINE_REMIND);
+    msg_broadcast_on_off_line(_p, OFFLINE_REMIND);
 
-    list_del(&p->person_node);
-    free(p);
+    list_del(&_p->person_node);
+    free(_p);
 
     return CMD_HANDLE_RET_OFF;
 }
 
 /* the msg will looks like: somebody: hello! */
 /* FIXME: there is so many useless operation */
-static int msg_broadcast(const struct person *p, const char *buff)
+static int msg_broadcast(const struct person *_p, const char *buff)
 {
+    char *message = (char *)malloc(strlen(buff) + ID_MAX);
+
+    memcpy(message, _p->id, strlen(_p->id));
+    message[strlen(_p->id) - 1] = ':'; // '\n' -> ':'
+    message[strlen(_p->id)] = ' ';
+    memcpy(message + strlen(_p->id) + 1, buff, strlen((char *)buff));
+    message[strlen(_p->id) + strlen((char *)buff) + 1] = '\0';
+
     struct list_head *itr;
     list_for_each (itr, &g_id_list) {
-        struct person *p = container_of(itr, struct person, person_node);
+        struct person *person = container_of(itr, struct person, person_node);
 
-        char *message = (char *)malloc(strlen(buff) + ID_MAX);
-
-        memcpy(message, p->id, strlen(p->id));
-        message[strlen(p->id) - 1] = ':'; // '\n' -> ':'
-        message[strlen(p->id)] = ' ';
-        memcpy(message + strlen(p->id) + 1, buff, strlen((char *)buff));
-        message[strlen(p->id) + strlen((char *)buff) + 1] = '\0';
-
-        send(p->client_fd, message, strlen(message), 0);
-
-        free(message);
+        send(person->client_fd, message, strlen(message), 0);
     }
 
+    free(message);
+    
     return CMD_HANDLE_RET_CONTINUE;
 }
 
