@@ -11,13 +11,14 @@
 
 #include "thpool.h"
 
-#define __UNUSED__ __attribute__((unused))
+#define __UNUSE__ __attribute__((unused))
 
 #define BUFFER_SIZE 1024
 
 #define ERR_BIND 1
 #define ERR_LISTEN 2
 
+/* online list */
 static LIST_HEAD(g_id_list);
 
 #define ID_MAX 10
@@ -28,6 +29,122 @@ struct person {
     struct list_head person_node;
 };
 
+#define CMD_HANDLE_RET_CONTINUE 0
+#define CMD_HANDLE_RET_OFF 1
+#define CMD_HANDLE_RET_GOON 2
+
+/* command 'list' handle */
+
+/* the msg will looks like this:
+*  ----------
+*
+*  dark
+*  yuri
+*  troy
+*  jay
+*  wick
+*  nick
+* 
+*  ----------
+*/
+static int command_list_handle(const struct person *p)
+{
+    const char *line = "\n----------\n\n";
+
+    send(p->client_fd, line, strlen(line), 0);
+    struct list_head *itr;
+    list_for_each (itr, &g_id_list) {
+        struct person *p = container_of(itr, struct person, person_node);
+
+        send(p->client_fd, p->id, strlen(p->id), 0);
+    }
+    send(p->client_fd, line, strlen(line), 0);
+
+    return CMD_HANDLE_RET_CONTINUE;
+}
+
+/* online broadcast */
+/* everybody who onlines will recive a msg from the server:
+*  somebody is coming!
+*/
+
+/* offline broadcast
+*  everybody who onlines will recive a msg from the server:
+*  somebody is leaving!
+*/
+
+#define ONLINE_REMIND 0
+#define OFFLINE_REMIND 1
+
+static void msg_broadcast_on_off_line(const struct person *p, int flag)
+{
+    const char *online_remind_msg_base;
+    if (ONLINE_REMIND == flag)
+        online_remind_msg_base = " is coming!\n";
+    else if (OFFLINE_REMIND == flag)
+        online_remind_msg_base = " is leaving!\n";
+
+    char *online_remind_msg =
+        (char *)malloc(strlen(online_remind_msg_base) + strlen(p->id) + 1);
+
+    strcat(online_remind_msg, p->id);
+    online_remind_msg[strlen(p->id) - 1] = '\0'; /* del the '\n' */
+    strcat(online_remind_msg, online_remind_msg_base);
+
+    printf("%s\n", online_remind_msg);
+
+    struct list_head *itr;
+    list_for_each (itr, &g_id_list) {
+        struct person *p = container_of(itr, struct person, person_node);
+
+        send(p->client_fd, online_remind_msg, strlen(online_remind_msg), 0);
+    }
+
+    free(online_remind_msg);
+}
+
+/* command 'off' handle */
+/* warning: this function will free your memory of pointer p*/
+static int command_off_handle(struct person *p)
+{
+    msg_broadcast_on_off_line(p, OFFLINE_REMIND);
+
+    list_del(&p->person_node);
+    free(p);
+
+    return CMD_HANDLE_RET_OFF;
+}
+
+/* the msg will looks like: somebody: hello! */
+/* FIXME: there is so many useless operation */
+static int msg_broadcast(const struct person *p, const char *buff)
+{
+    struct list_head *itr;
+    list_for_each (itr, &g_id_list) {
+        struct person *p = container_of(itr, struct person, person_node);
+
+        char *message = (char *)malloc(strlen(buff) + ID_MAX);
+
+        memcpy(message, p->id, strlen(p->id));
+        message[strlen(p->id) - 1] = ':'; // '\n' -> ':'
+        message[strlen(p->id)] = ' ';
+        memcpy(message + strlen(p->id) + 1, buff, strlen((char *)buff));
+        message[strlen(p->id) + strlen((char *)buff) + 1] = '\0';
+
+        send(p->client_fd, message, strlen(message), 0);
+
+        free(message);
+    }
+
+    return CMD_HANDLE_RET_CONTINUE;
+}
+
+static inline void server_log(const char *log_msg)
+{
+    printf("%s\n", log_msg);
+}
+
+/* FIXME: logic optimization */
 static void tcp_server_handle(void *args)
 {
     int client_fd = *(int *)args;
@@ -40,8 +157,10 @@ static void tcp_server_handle(void *args)
     person->client_fd = client_fd;
     list_add(&person->person_node, &g_id_list);
 
-    const char *msg = "login successful\n";
-    send(client_fd, msg, strlen(msg), 0);
+    const char *log_ok_msg = "login successful\n";
+    send(client_fd, log_ok_msg, strlen(log_ok_msg), 0);
+
+    msg_broadcast_on_off_line(person, ONLINE_REMIND);
 
     for (;;) {
         int n = recv(client_fd, buff, BUFFER_SIZE, 0);
@@ -50,54 +169,29 @@ static void tcp_server_handle(void *args)
 
         /* When a stream socket peer has performed an orderly shutdown, the return value will be 0 (the traditional "end-of-file" return). */
         if (!n || strstr((const char *)buff, "off")) {
-            /* power off */
-            
-            list_del(&person->person_node);
-            free(person);
-
-            const char *msg = "you out\n";
-            send(client_fd, msg, strlen(msg), 0);
-
+            __UNUSE__ int ret = command_off_handle(person);
             goto POWER_OFF;
         }
 
-        /* command 'list' handle */
         if (strstr((const char *)buff, "list")) {
-            struct list_head *itr;
-            list_for_each(itr, &g_id_list) {
-                struct person *p = container_of(itr, struct person, person_node);
-
-                send(client_fd, p->id, strlen(p->id), 0);
-            }
-
+            __UNUSE__ int ret = command_list_handle(person);
             continue;
         }
 
-        printf("%s\n", buff);
+        /* server temp log */
+        server_log((const char *)buff);
 
         /* msg broadcast */
-        struct list_head *itr;
-        list_for_each(itr, &g_id_list) {
-            struct person *p = container_of(itr, struct person, person_node);
-
-            char *msg = (char *)malloc(sizeof(msg) * strlen((char *)buff) + ID_MAX);
-
-            memcpy(msg, person->id, strlen(person->id));
-            msg[strlen(person->id) - 1] = ':'; // '\n' -> ':'
-            msg[strlen(person->id)] = ' ';
-            memcpy(msg + strlen(person->id) + 1, buff, strlen((char *)buff));
-            msg[strlen(person->id) + strlen((char *)buff) + 1] = '\0';
-
-            send(p->client_fd, msg, strlen(msg), 0);
-        }
+        msg_broadcast(person, (const char *)buff);
     }
 
 POWER_OFF:
     close(client_fd);
 }
 
-static int tcp_server_run(char *ip)
+static int tcp_server_run(const char *ip)
 {
+    /* thread pool initialize */
     threadpool thpool = thpool_init(1024);
 
     int server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -120,6 +214,7 @@ static int tcp_server_run(char *ip)
     memset(&client_addr, 0, sizeof(client_addr));
     socklen_t client_addr_size = sizeof(client_addr);
 
+    /* FIXME: epoll or select model */
     for (;;) {
         int client_socket = accept(
             server_socket, (struct sockaddr *)&client_addr, &client_addr_size);

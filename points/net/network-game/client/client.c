@@ -49,6 +49,7 @@ int main(int argc, char **argv)
     BZERO(&server_addr, sizeof(server_addr));
     server_addr.sin_family = PF_INET;
     server_addr.sin_addr.s_addr = inet_addr("120.27.245.242");
+    // server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     server_addr.sin_port = htons(55559);
 
     connect(client_socket, (struct sockaddr *)&server_addr,
