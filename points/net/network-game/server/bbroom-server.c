@@ -63,12 +63,11 @@ static int command_list_handle(const struct person *_person)
     return CMD_HANDLE_RET_CONTINUE;
 }
 
-/* online broadcast */
-/* everybody who onlines will recive a msg from the server:
+/* online broadcast
+*  everybody who onlines will recive a msg from the server:
 *  somebody is coming!
-*/
-
-/* offline broadcast
+*
+* offline broadcast
 *  everybody who onlines will recive a msg from the server:
 *  somebody is leaving!
 */
@@ -139,6 +138,7 @@ static int msg_broadcast(const struct person *_p, const char *buff)
     return CMD_HANDLE_RET_CONTINUE;
 }
 
+/* FIXME: log file r/w */
 static inline void server_log(const char *log_msg)
 {
     printf("%s\n", log_msg);
@@ -152,6 +152,7 @@ static void tcp_server_handle(void *args)
 
     int n = recv(client_fd, buff, BUFFER_SIZE, 0);
 
+    /* struct person initialize and put it into online list */
     struct person *person = (struct person *)malloc(sizeof(*person));
     memcpy(person->id, buff, n);
     person->client_fd = client_fd;
@@ -166,6 +167,8 @@ static void tcp_server_handle(void *args)
         int n = recv(client_fd, buff, BUFFER_SIZE, 0);
 
         buff[n] = '\0';
+
+        /* FIXME: when user input a msg which is "xxxx off xxxx", the command_off_handle still be working */
 
         /* When a stream socket peer has performed an orderly shutdown, the return value will be 0 (the traditional "end-of-file" return). */
         if (!n || strstr((const char *)buff, "off")) {
