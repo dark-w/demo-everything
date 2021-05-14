@@ -26,6 +26,7 @@ int main() {
     cout << "ping()" << endl;
 
     cout << client.max(55, 888) << endl;
+    cout << client.gcd(50, 80) <<endl;
 
     transport->close();
   } catch (TException& tx) {
