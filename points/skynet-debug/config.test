@@ -1,0 +1,10 @@
+thread=8 -- 线程池的大小 N:M
+logger=nil
+harbor=0
+start="main" -- 启动服务
+lua_path="./skynet/lualib/?.lua;".."./test/lualib/?.lua;".."./skynet/lualib/?/init.lua"
+luaservice = "./skynet/service/?.lua;".."./test/service/?.lua;".."./skynet/test/?.lua;"
+lualoader = "./skynet/lualib/loader.lua"
+cpath = "./skynet/cservice/?.so;"
+lua_cpath = "./skynet/luaclib/?.so;"
+-- actor 在skynet当中 叫 服务  service
