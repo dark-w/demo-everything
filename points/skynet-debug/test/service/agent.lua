@@ -154,24 +154,12 @@ function CMD.rank()
     end
 
     table.sort(rank, function (lhs, rhs)
-        return lhs.score > rhs.score
+        return lhs.score < rhs.score
     end)
 
     for k, v in ipairs(rank) do
-        print(k, v.name, v.score)
+        socket.write(clientfd, k .. " " .. v.name  .. " " .. v.score .. "\n")
     end
-    -- for n, s in ipairs(all_scores) do
-    --     -- print(n, s)
-    --     print(all_scores["role:a"])
-    --     print(all_scores["role:b"])
-    --     print(all_scores["role:c"])
-    -- end
-
-    -- table.sort(all_clients, function (lhs, rhs)
-    --     return lhs.score    
-    -- end
-
-    socket.write(clientfd, ("score: %d" .. "\n"):format(score))
 end
 
 function CMD.quit()

@@ -23,8 +23,6 @@ local function read_table(result)
 end
 
 local function sendto(clientfd, arg)
-    -- local ret = tconcat({"fd:", clientfd, arg}, " ")
-    -- socket.write(clientfd, ret .. "\n")
     socket.write(clientfd, arg .. "\n")
 end
 
@@ -89,20 +87,18 @@ local function game_over(name)
         print(client_tmp.score)
         print(client_tmp.name)
         if role.isonline == 0 then
-            print("---")
-
-            skynet.call(redisd, "lua", "hset", "role:" .. role.name, "isgame", 0)
+            skynet.call(redisd, "hset", "role:" .. role.name, "isgame", 0)
           
             if role.name == name then
-                skynet.call(redisd, "lua", "hset", "role:" .. role.name, "score", client_tmp.score + 100)
+                skynet.call(redisd, "hset", "role:" .. role.name, "score", client_tmp.score + 100)
             else
-                skynet.call(redisd, "lua", "hset", "role:" .. role.name, "score", client_tmp.score - 100)
+                skynet.call(redisd, "hset", "role:" .. role.name, "score", client_tmp.score - 100)
             end
         else
             if role.name == name then
-                skynet.send(role.agent, "game_over", tostring(client_tmp.score + 100))
+                skynet.send(role.agent, "lua", "game_over", client_tmp.score + 100)
             else
-                skynet.send(role.agent, "game_over", tostring(client_tmp.score - 100))
+                skynet.send(role.agent, "lua", "game_over", client_tmp.score - 100)
             end
             sendto(role.fd, "离开房间")
         end
