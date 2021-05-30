@@ -2,6 +2,8 @@ local skynet = require "skynet"
 
 local socket = require "skynet.socket"
 
+local map = require "map"
+
 local CMD = {}
 
 local roles = {}
@@ -56,6 +58,9 @@ function CMD.start(members)
     end
     local name = game.turns[game.user_turn]
     broadcast(("请玩家%s开始猜数字"):format(name))
+
+    map.init(10, 10)
+    map.show()
 end
 
 function CMD.offline(name)
