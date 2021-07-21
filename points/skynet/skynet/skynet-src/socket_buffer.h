@@ -8,10 +8,10 @@
 #define SOCKET_BUFFER_RAWPOINTER 2
 
 struct socket_sendbuffer {
-	int id;
-	int type;
-	const void *buffer;
-	size_t sz;
+    int id;
+    int type;
+    const void *buffer;
+    size_t sz;
 };
 
 #endif

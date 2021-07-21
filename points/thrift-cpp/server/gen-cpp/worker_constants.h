@@ -9,16 +9,15 @@
 
 #include "worker_types.h"
 
-namespace freebird {
-
+namespace freebird
+{
 class workerConstants {
- public:
-  workerConstants();
-
+public:
+    workerConstants();
 };
 
 extern const workerConstants g_worker_constants;
 
-} // namespace
+} // namespace freebird
 
 #endif

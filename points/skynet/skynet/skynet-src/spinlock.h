@@ -26,33 +26,34 @@
 #endif
 
 struct spinlock {
-	atomic_flag_ lock;
+    atomic_flag_ lock;
 };
 
-static inline void
-spinlock_init(struct spinlock *lock) {
-	atomic_flag_ v = ATOMIC_FLAG_INIT_;
-	lock->lock = v;
+static inline void spinlock_init(struct spinlock *lock)
+{
+    atomic_flag_ v = ATOMIC_FLAG_INIT_;
+    lock->lock = v;
 }
 
-static inline void
-spinlock_lock(struct spinlock *lock) {
-	while (atomic_flag_test_and_set_(&lock->lock)) {}
+static inline void spinlock_lock(struct spinlock *lock)
+{
+    while (atomic_flag_test_and_set_(&lock->lock)) {
+    }
 }
 
-static inline int
-spinlock_trylock(struct spinlock *lock) {
-	return atomic_flag_test_and_set_(&lock->lock) == 0;
+static inline int spinlock_trylock(struct spinlock *lock)
+{
+    return atomic_flag_test_and_set_(&lock->lock) == 0;
 }
 
-static inline void
-spinlock_unlock(struct spinlock *lock) {
-	atomic_flag_clear_(&lock->lock);
+static inline void spinlock_unlock(struct spinlock *lock)
+{
+    atomic_flag_clear_(&lock->lock);
 }
 
-static inline void
-spinlock_destroy(struct spinlock *lock) {
-	(void) lock;
+static inline void spinlock_destroy(struct spinlock *lock)
+{
+    (void)lock;
 }
 
 #else
@@ -63,32 +64,32 @@ spinlock_destroy(struct spinlock *lock) {
 // you can also replace to pthread_spinlock
 
 struct spinlock {
-	pthread_mutex_t lock;
+    pthread_mutex_t lock;
 };
 
-static inline void
-spinlock_init(struct spinlock *lock) {
-	pthread_mutex_init(&lock->lock, NULL);
+static inline void spinlock_init(struct spinlock *lock)
+{
+    pthread_mutex_init(&lock->lock, NULL);
 }
 
-static inline void
-spinlock_lock(struct spinlock *lock) {
-	pthread_mutex_lock(&lock->lock);
+static inline void spinlock_lock(struct spinlock *lock)
+{
+    pthread_mutex_lock(&lock->lock);
 }
 
-static inline int
-spinlock_trylock(struct spinlock *lock) {
-	return pthread_mutex_trylock(&lock->lock) == 0;
+static inline int spinlock_trylock(struct spinlock *lock)
+{
+    return pthread_mutex_trylock(&lock->lock) == 0;
 }
 
-static inline void
-spinlock_unlock(struct spinlock *lock) {
-	pthread_mutex_unlock(&lock->lock);
+static inline void spinlock_unlock(struct spinlock *lock)
+{
+    pthread_mutex_unlock(&lock->lock);
 }
 
-static inline void
-spinlock_destroy(struct spinlock *lock) {
-	pthread_mutex_destroy(&lock->lock);
+static inline void spinlock_destroy(struct spinlock *lock)
+{
+    pthread_mutex_destroy(&lock->lock);
 }
 
 #endif

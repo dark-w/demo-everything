@@ -5,27 +5,28 @@
 #include <stdint.h>
 
 struct skynet_message {
-	uint32_t source;
-	int session;
-	void * data;
-	size_t sz;
+    uint32_t source;
+    int session;
+    void *data;
+    size_t sz;
 };
 
 // type is encoding in skynet_message.sz high 8bit
 #define MESSAGE_TYPE_MASK (SIZE_MAX >> 8)
-#define MESSAGE_TYPE_SHIFT ((sizeof(size_t)-1) * 8)
+#define MESSAGE_TYPE_SHIFT ((sizeof(size_t) - 1) * 8)
 
 struct message_queue;
 
-void skynet_globalmq_push(struct message_queue * queue);
-struct message_queue * skynet_globalmq_pop(void);
+void skynet_globalmq_push(struct message_queue *queue);
+struct message_queue *skynet_globalmq_pop(void);
 
-struct message_queue * skynet_mq_create(uint32_t handle);
+struct message_queue *skynet_mq_create(uint32_t handle);
 void skynet_mq_mark_release(struct message_queue *q);
 
 typedef void (*message_drop)(struct skynet_message *, void *);
 
-void skynet_mq_release(struct message_queue *q, message_drop drop_func, void *ud);
+void skynet_mq_release(struct message_queue *q, message_drop drop_func,
+                       void *ud);
 uint32_t skynet_mq_handle(struct message_queue *);
 
 // 0 for success

@@ -10,15 +10,15 @@
 #include "jemalloc/internal/sc.h"
 
 typedef enum {
-	extent_state_active   = 0,
-	extent_state_dirty    = 1,
-	extent_state_muzzy    = 2,
-	extent_state_retained = 3
+    extent_state_active = 0,
+    extent_state_dirty = 1,
+    extent_state_muzzy = 2,
+    extent_state_retained = 3
 } extent_state_t;
 
 /* Extent (span of pages).  Use accessor functions for e_* fields. */
 struct extent_s {
-	/*
+    /*
 	 * Bitfield containing several fields:
 	 *
 	 * a: arena_ind
@@ -89,97 +89,119 @@ struct extent_s {
 	 *     wrap-around, e.g. when splitting an extent and assigning the same
 	 *     serial number to both resulting adjacent extents.
 	 */
-	uint64_t		e_bits;
-#define MASK(CURRENT_FIELD_WIDTH, CURRENT_FIELD_SHIFT) ((((((uint64_t)0x1U) << (CURRENT_FIELD_WIDTH)) - 1)) << (CURRENT_FIELD_SHIFT))
+    uint64_t e_bits;
+#define MASK(CURRENT_FIELD_WIDTH, CURRENT_FIELD_SHIFT)                         \
+    ((((((uint64_t)0x1U) << (CURRENT_FIELD_WIDTH)) - 1))                       \
+     << (CURRENT_FIELD_SHIFT))
 
-#define EXTENT_BITS_ARENA_WIDTH  MALLOCX_ARENA_BITS
-#define EXTENT_BITS_ARENA_SHIFT  0
-#define EXTENT_BITS_ARENA_MASK  MASK(EXTENT_BITS_ARENA_WIDTH, EXTENT_BITS_ARENA_SHIFT)
+#define EXTENT_BITS_ARENA_WIDTH MALLOCX_ARENA_BITS
+#define EXTENT_BITS_ARENA_SHIFT 0
+#define EXTENT_BITS_ARENA_MASK                                                 \
+    MASK(EXTENT_BITS_ARENA_WIDTH, EXTENT_BITS_ARENA_SHIFT)
 
-#define EXTENT_BITS_SLAB_WIDTH  1
-#define EXTENT_BITS_SLAB_SHIFT  (EXTENT_BITS_ARENA_WIDTH + EXTENT_BITS_ARENA_SHIFT)
-#define EXTENT_BITS_SLAB_MASK  MASK(EXTENT_BITS_SLAB_WIDTH, EXTENT_BITS_SLAB_SHIFT)
+#define EXTENT_BITS_SLAB_WIDTH 1
+#define EXTENT_BITS_SLAB_SHIFT                                                 \
+    (EXTENT_BITS_ARENA_WIDTH + EXTENT_BITS_ARENA_SHIFT)
+#define EXTENT_BITS_SLAB_MASK                                                  \
+    MASK(EXTENT_BITS_SLAB_WIDTH, EXTENT_BITS_SLAB_SHIFT)
 
-#define EXTENT_BITS_COMMITTED_WIDTH  1
-#define EXTENT_BITS_COMMITTED_SHIFT  (EXTENT_BITS_SLAB_WIDTH + EXTENT_BITS_SLAB_SHIFT)
-#define EXTENT_BITS_COMMITTED_MASK  MASK(EXTENT_BITS_COMMITTED_WIDTH, EXTENT_BITS_COMMITTED_SHIFT)
+#define EXTENT_BITS_COMMITTED_WIDTH 1
+#define EXTENT_BITS_COMMITTED_SHIFT                                            \
+    (EXTENT_BITS_SLAB_WIDTH + EXTENT_BITS_SLAB_SHIFT)
+#define EXTENT_BITS_COMMITTED_MASK                                             \
+    MASK(EXTENT_BITS_COMMITTED_WIDTH, EXTENT_BITS_COMMITTED_SHIFT)
 
-#define EXTENT_BITS_DUMPABLE_WIDTH  1
-#define EXTENT_BITS_DUMPABLE_SHIFT  (EXTENT_BITS_COMMITTED_WIDTH + EXTENT_BITS_COMMITTED_SHIFT)
-#define EXTENT_BITS_DUMPABLE_MASK  MASK(EXTENT_BITS_DUMPABLE_WIDTH, EXTENT_BITS_DUMPABLE_SHIFT)
+#define EXTENT_BITS_DUMPABLE_WIDTH 1
+#define EXTENT_BITS_DUMPABLE_SHIFT                                             \
+    (EXTENT_BITS_COMMITTED_WIDTH + EXTENT_BITS_COMMITTED_SHIFT)
+#define EXTENT_BITS_DUMPABLE_MASK                                              \
+    MASK(EXTENT_BITS_DUMPABLE_WIDTH, EXTENT_BITS_DUMPABLE_SHIFT)
 
-#define EXTENT_BITS_ZEROED_WIDTH  1
-#define EXTENT_BITS_ZEROED_SHIFT  (EXTENT_BITS_DUMPABLE_WIDTH + EXTENT_BITS_DUMPABLE_SHIFT)
-#define EXTENT_BITS_ZEROED_MASK  MASK(EXTENT_BITS_ZEROED_WIDTH, EXTENT_BITS_ZEROED_SHIFT)
+#define EXTENT_BITS_ZEROED_WIDTH 1
+#define EXTENT_BITS_ZEROED_SHIFT                                               \
+    (EXTENT_BITS_DUMPABLE_WIDTH + EXTENT_BITS_DUMPABLE_SHIFT)
+#define EXTENT_BITS_ZEROED_MASK                                                \
+    MASK(EXTENT_BITS_ZEROED_WIDTH, EXTENT_BITS_ZEROED_SHIFT)
 
-#define EXTENT_BITS_STATE_WIDTH  2
-#define EXTENT_BITS_STATE_SHIFT  (EXTENT_BITS_ZEROED_WIDTH + EXTENT_BITS_ZEROED_SHIFT)
-#define EXTENT_BITS_STATE_MASK  MASK(EXTENT_BITS_STATE_WIDTH, EXTENT_BITS_STATE_SHIFT)
+#define EXTENT_BITS_STATE_WIDTH 2
+#define EXTENT_BITS_STATE_SHIFT                                                \
+    (EXTENT_BITS_ZEROED_WIDTH + EXTENT_BITS_ZEROED_SHIFT)
+#define EXTENT_BITS_STATE_MASK                                                 \
+    MASK(EXTENT_BITS_STATE_WIDTH, EXTENT_BITS_STATE_SHIFT)
 
-#define EXTENT_BITS_SZIND_WIDTH  LG_CEIL(SC_NSIZES)
-#define EXTENT_BITS_SZIND_SHIFT  (EXTENT_BITS_STATE_WIDTH + EXTENT_BITS_STATE_SHIFT)
-#define EXTENT_BITS_SZIND_MASK  MASK(EXTENT_BITS_SZIND_WIDTH, EXTENT_BITS_SZIND_SHIFT)
+#define EXTENT_BITS_SZIND_WIDTH LG_CEIL(SC_NSIZES)
+#define EXTENT_BITS_SZIND_SHIFT                                                \
+    (EXTENT_BITS_STATE_WIDTH + EXTENT_BITS_STATE_SHIFT)
+#define EXTENT_BITS_SZIND_MASK                                                 \
+    MASK(EXTENT_BITS_SZIND_WIDTH, EXTENT_BITS_SZIND_SHIFT)
 
-#define EXTENT_BITS_NFREE_WIDTH  (LG_SLAB_MAXREGS + 1)
-#define EXTENT_BITS_NFREE_SHIFT  (EXTENT_BITS_SZIND_WIDTH + EXTENT_BITS_SZIND_SHIFT)
-#define EXTENT_BITS_NFREE_MASK  MASK(EXTENT_BITS_NFREE_WIDTH, EXTENT_BITS_NFREE_SHIFT)
+#define EXTENT_BITS_NFREE_WIDTH (LG_SLAB_MAXREGS + 1)
+#define EXTENT_BITS_NFREE_SHIFT                                                \
+    (EXTENT_BITS_SZIND_WIDTH + EXTENT_BITS_SZIND_SHIFT)
+#define EXTENT_BITS_NFREE_MASK                                                 \
+    MASK(EXTENT_BITS_NFREE_WIDTH, EXTENT_BITS_NFREE_SHIFT)
 
-#define EXTENT_BITS_BINSHARD_WIDTH  6
-#define EXTENT_BITS_BINSHARD_SHIFT  (EXTENT_BITS_NFREE_WIDTH + EXTENT_BITS_NFREE_SHIFT)
-#define EXTENT_BITS_BINSHARD_MASK  MASK(EXTENT_BITS_BINSHARD_WIDTH, EXTENT_BITS_BINSHARD_SHIFT)
+#define EXTENT_BITS_BINSHARD_WIDTH 6
+#define EXTENT_BITS_BINSHARD_SHIFT                                             \
+    (EXTENT_BITS_NFREE_WIDTH + EXTENT_BITS_NFREE_SHIFT)
+#define EXTENT_BITS_BINSHARD_MASK                                              \
+    MASK(EXTENT_BITS_BINSHARD_WIDTH, EXTENT_BITS_BINSHARD_SHIFT)
 
 #define EXTENT_BITS_IS_HEAD_WIDTH 1
-#define EXTENT_BITS_IS_HEAD_SHIFT  (EXTENT_BITS_BINSHARD_WIDTH + EXTENT_BITS_BINSHARD_SHIFT)
-#define EXTENT_BITS_IS_HEAD_MASK  MASK(EXTENT_BITS_IS_HEAD_WIDTH, EXTENT_BITS_IS_HEAD_SHIFT)
+#define EXTENT_BITS_IS_HEAD_SHIFT                                              \
+    (EXTENT_BITS_BINSHARD_WIDTH + EXTENT_BITS_BINSHARD_SHIFT)
+#define EXTENT_BITS_IS_HEAD_MASK                                               \
+    MASK(EXTENT_BITS_IS_HEAD_WIDTH, EXTENT_BITS_IS_HEAD_SHIFT)
 
-#define EXTENT_BITS_SN_SHIFT   (EXTENT_BITS_IS_HEAD_WIDTH + EXTENT_BITS_IS_HEAD_SHIFT)
-#define EXTENT_BITS_SN_MASK  (UINT64_MAX << EXTENT_BITS_SN_SHIFT)
+#define EXTENT_BITS_SN_SHIFT                                                   \
+    (EXTENT_BITS_IS_HEAD_WIDTH + EXTENT_BITS_IS_HEAD_SHIFT)
+#define EXTENT_BITS_SN_MASK (UINT64_MAX << EXTENT_BITS_SN_SHIFT)
 
-	/* Pointer to the extent that this structure is responsible for. */
-	void			*e_addr;
+    /* Pointer to the extent that this structure is responsible for. */
+    void *e_addr;
 
-	union {
-		/*
+    union {
+        /*
 		 * Extent size and serial number associated with the extent
 		 * structure (different than the serial number for the extent at
 		 * e_addr).
 		 *
 		 * ssssssss [...] ssssssss ssssnnnn nnnnnnnn
 		 */
-		size_t			e_size_esn;
-	#define EXTENT_SIZE_MASK	((size_t)~(PAGE-1))
-	#define EXTENT_ESN_MASK		((size_t)PAGE-1)
-		/* Base extent size, which may not be a multiple of PAGE. */
-		size_t			e_bsize;
-	};
+        size_t e_size_esn;
+#define EXTENT_SIZE_MASK ((size_t) ~(PAGE - 1))
+#define EXTENT_ESN_MASK ((size_t)PAGE - 1)
+        /* Base extent size, which may not be a multiple of PAGE. */
+        size_t e_bsize;
+    };
 
-	/*
+    /*
 	 * List linkage, used by a variety of lists:
 	 * - bin_t's slabs_full
 	 * - extents_t's LRU
 	 * - stashed dirty extents
 	 * - arena's large allocations
 	 */
-	ql_elm(extent_t)	ql_link;
+    ql_elm(extent_t) ql_link;
 
-	/*
+    /*
 	 * Linkage for per size class sn/address-ordered heaps, and
 	 * for extent_avail
 	 */
-	phn(extent_t)		ph_link;
+    phn(extent_t) ph_link;
 
-	union {
-		/* Small region slab metadata. */
-		arena_slab_data_t	e_slab_data;
+    union {
+        /* Small region slab metadata. */
+        arena_slab_data_t e_slab_data;
 
-		/* Profiling data, used for large objects. */
-		struct {
-			/* Time when this was allocated. */
-			nstime_t		e_alloc_time;
-			/* Points to a prof_tctx_t. */
-			atomic_p_t		e_prof_tctx;
-		};
-	};
+        /* Profiling data, used for large objects. */
+        struct {
+            /* Time when this was allocated. */
+            nstime_t e_alloc_time;
+            /* Points to a prof_tctx_t. */
+            atomic_p_t e_prof_tctx;
+        };
+    };
 };
 typedef ql_head(extent_t) extent_list_t;
 typedef ph(extent_t) extent_tree_t;
@@ -187,32 +209,32 @@ typedef ph(extent_t) extent_heap_t;
 
 /* Quantized collection of extents, with built-in LRU queue. */
 struct extents_s {
-	malloc_mutex_t		mtx;
+    malloc_mutex_t mtx;
 
-	/*
+    /*
 	 * Quantized per size class heaps of extents.
 	 *
 	 * Synchronization: mtx.
 	 */
-	extent_heap_t		heaps[SC_NPSIZES + 1];
-	atomic_zu_t		nextents[SC_NPSIZES + 1];
-	atomic_zu_t		nbytes[SC_NPSIZES + 1];
+    extent_heap_t heaps[SC_NPSIZES + 1];
+    atomic_zu_t nextents[SC_NPSIZES + 1];
+    atomic_zu_t nbytes[SC_NPSIZES + 1];
 
-	/*
+    /*
 	 * Bitmap for which set bits correspond to non-empty heaps.
 	 *
 	 * Synchronization: mtx.
 	 */
-	bitmap_t		bitmap[BITMAP_GROUPS(SC_NPSIZES + 1)];
+    bitmap_t bitmap[BITMAP_GROUPS(SC_NPSIZES + 1)];
 
-	/*
+    /*
 	 * LRU of all extents in heaps.
 	 *
 	 * Synchronization: mtx.
 	 */
-	extent_list_t		lru;
+    extent_list_t lru;
 
-	/*
+    /*
 	 * Page sum for all extents in heaps.
 	 *
 	 * The synchronization here is a little tricky.  Modifications to npages
@@ -220,16 +242,16 @@ struct extents_s {
 	 * without holding the mutex can't assume anything about the rest of the
 	 * state of the extents_t).
 	 */
-	atomic_zu_t		npages;
+    atomic_zu_t npages;
 
-	/* All stored extents must be in the same state. */
-	extent_state_t		state;
+    /* All stored extents must be in the same state. */
+    extent_state_t state;
 
-	/*
+    /*
 	 * If true, delay coalescing until eviction; otherwise coalesce during
 	 * deallocation.
 	 */
-	bool			delay_coalesce;
+    bool delay_coalesce;
 };
 
 /*
@@ -239,18 +261,18 @@ struct extents_s {
  */
 
 struct extent_util_stats_s {
-	size_t nfree;
-	size_t nregs;
-	size_t size;
+    size_t nfree;
+    size_t nregs;
+    size_t size;
 };
 
 struct extent_util_stats_verbose_s {
-	void *slabcur_addr;
-	size_t nfree;
-	size_t nregs;
-	size_t size;
-	size_t bin_nfree;
-	size_t bin_nregs;
+    void *slabcur_addr;
+    size_t nfree;
+    size_t nregs;
+    size_t size;
+    size_t bin_nfree;
+    size_t bin_nregs;
 };
 
 #endif /* JEMALLOC_INTERNAL_EXTENT_STRUCTS_H */

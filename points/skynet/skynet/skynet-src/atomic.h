@@ -13,12 +13,13 @@
 #define ATOM_LOAD(ptr) (*(ptr))
 #define ATOM_STORE(ptr, v) (*(ptr) = v)
 #define ATOM_CAS(ptr, oval, nval) __sync_bool_compare_and_swap(ptr, oval, nval)
-#define ATOM_CAS_POINTER(ptr, oval, nval) __sync_bool_compare_and_swap(ptr, oval, nval)
+#define ATOM_CAS_POINTER(ptr, oval, nval)                                      \
+    __sync_bool_compare_and_swap(ptr, oval, nval)
 #define ATOM_FINC(ptr) __sync_fetch_and_add(ptr, 1)
 #define ATOM_FDEC(ptr) __sync_fetch_and_sub(ptr, 1)
-#define ATOM_FADD(ptr,n) __sync_fetch_and_add(ptr, n)
-#define ATOM_FSUB(ptr,n) __sync_fetch_and_sub(ptr, n)
-#define ATOM_FAND(ptr,n) __sync_fetch_and_and(ptr, n)
+#define ATOM_FADD(ptr, n) __sync_fetch_and_add(ptr, n)
+#define ATOM_FSUB(ptr, n) __sync_fetch_and_sub(ptr, n)
+#define ATOM_FAND(ptr, n) __sync_fetch_and_and(ptr, n)
 
 #else
 
@@ -31,13 +32,15 @@
 #define ATOM_INIT(ref, v) atomic_init(ref, v)
 #define ATOM_LOAD(ptr) atomic_load(ptr)
 #define ATOM_STORE(ptr, v) atomic_store(ptr, v)
-#define ATOM_CAS(ptr, oval, nval) atomic_compare_exchange_weak(ptr, &(oval), nval)
-#define ATOM_CAS_POINTER(ptr, oval, nval) atomic_compare_exchange_weak(ptr, &(oval), nval)
+#define ATOM_CAS(ptr, oval, nval)                                              \
+    atomic_compare_exchange_weak(ptr, &(oval), nval)
+#define ATOM_CAS_POINTER(ptr, oval, nval)                                      \
+    atomic_compare_exchange_weak(ptr, &(oval), nval)
 #define ATOM_FINC(ptr) atomic_fetch_add(ptr, 1)
 #define ATOM_FDEC(ptr) atomic_fetch_sub(ptr, 1)
-#define ATOM_FADD(ptr,n) atomic_fetch_add(ptr, n)
-#define ATOM_FSUB(ptr,n) atomic_fetch_sub(ptr, n)
-#define ATOM_FAND(ptr,n) atomic_fetch_and(ptr, n)
+#define ATOM_FADD(ptr, n) atomic_fetch_add(ptr, n)
+#define ATOM_FSUB(ptr, n) atomic_fetch_sub(ptr, n)
+#define ATOM_FAND(ptr, n) atomic_fetch_and(ptr, n)
 
 #endif
 

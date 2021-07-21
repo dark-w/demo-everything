@@ -18,9 +18,8 @@
 #include <functional>
 #include <memory>
 
-
-namespace freebird {
-
-} // namespace
+namespace freebird
+{
+} // namespace freebird
 
 #endif

@@ -4,8 +4,9 @@
 #include "types.h"
 
 #include "sokoban.h"
+#include "hsv_rgb.h"
 
-int main(void)
+static void sokoban_test(void)
 {
     struct sokoban_map base_map = { .length = LENTH,
                                     .width = WIDTH,
@@ -60,6 +61,18 @@ int main(void)
 
 end:
     free_map(&base_map);
+}
+
+LIBRGB_SUPPORTED(12)
+
+static void hsv_rgb_test(void)
+{
+}
+
+int main(void)
+{
+    sokoban_test();
+    hsv_rgb_test();
 
     return 0;
 }

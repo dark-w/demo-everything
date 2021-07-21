@@ -134,7 +134,7 @@ static int msg_broadcast(const struct person *_p, const char *buff)
     }
 
     free(message);
-    
+
     return CMD_HANDLE_RET_CONTINUE;
 }
 
