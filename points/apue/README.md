@@ -1,5 +1,5 @@
 # UNIX高级环境编程
-<center>inux下一切皆文件</center>
+<center>Linux下一切皆文件</center>
 
 - [UNIX高级环境编程](#unix高级环境编程)
   - [第一章 UNIX基础知识](#第一章-unix基础知识)
@@ -9,6 +9,11 @@
       - [4.文件和目录](#4文件和目录)
       - [5.输入与输出](#5输入与输出)
       - [6.程序和进程](#6程序和进程)
+      - [7.出错处理(不怎么懂)](#7出错处理不怎么懂)
+      - [8.用户标识](#8用户标识)
+      - [9.信号](#9信号)
+      - [10.时间值](#10时间值)
+      - [11.系统调用和库函数](#11系统调用和库函数)
 ## 第一章 UNIX基础知识
 
 #### 1.UNIX体系结构
@@ -41,7 +46,7 @@ THENEX C shell  /bin/tcsh
 root   “/”
 绝对路径和相对路径
 ```
-```myls.c
+```c
 #include "apue.h"  // 自写头文件
 #include <dirent>  // /usr/include/dirent.h
 
@@ -83,7 +88,7 @@ int main(int argc, char *argv[])
 
 进程控制的主要三个函数fork，exec，waitpid。
 ```
-```process.c
+```c
 #include <apue.h>
 #include <sys/wait.h>
 
@@ -118,8 +123,99 @@ int main()
 
 ```
 
+#### 7.出错处理(不怎么懂)
+```c
+#include <apue.h>
+#include <errno.h>
 
+int main(int argc, char *argv[])
+{
+    fprintf(stderr, "EACCES: %s\n", strerror(EACCES));
+    errno = ENOENT;
+    perror(argv[0]);
+    exit(0);
+}
 
+出错恢复:
+```
+
+#### 8.用户标识
+```
+用户ID:是一个数值。标识不同用户。(ID为0为root用户)
+组ID:它是一个数值。用户可以划分到组内，这种机制允许同组之间的各个成员之间共享资源。
+组文件:/etc/group
+存储用户ID和组ID只需要四个字节
+附属组ID:允许一个用户属于至多16组
+```
+
+#### 9.信号
+```
+进程有以下3种处理信号的方式：
+1.忽略信号
+2.终止该进程
+3.提供一个函数，在信号发生时调用该函数。捕获该信号
+```
+```c
+#include <apue.h>
+#include <sys/wait.h>
+
+static void sig_int(int);
+
+int main()
+{
+    char    buf[MAXLINE];
+    pid_t   pid;
+    int     status;
+
+    if (signal(SIGINT, sig_int) == SIG_ERR)
+        err_sys("signal_err");
+
+    printf("%% ");
+    while (fgets(buf, MAXLINE, stdin) != NULL) {
+        if (buf[strlen(buf) - 1] == '\n')
+            buf[strlen(buf) - 1] = 0;
+    
+
+    if ((pid = fork()) < 0) {
+        err_sys("fork_error");
+    } else if (pid == 0) {
+        execlp(buf, buf, (char *)0);
+        err_ret("could't execute : %s", buf);
+        exit(127);
+    }
+    
+    if ((pid = waitpid(pid, &status, 0)) < 0)
+        err_sys("waitpid error");
+    printf("%% ");
+
+    }    
+    exit(0);
+}
+
+void sig_int(int signo)
+{
+    printf("interrupt\n%% ");
+}
+
+```
+
+#### 10.时间值
+```
+日历时间:(开始时间为世界时间1970年1月1日00:00:00)用time_t保存时间值。
+进程时间:(CPU时间)
+通过time命令来查看
+时钟时间；
+用户CPU时间；
+系统CPU时间；
+```
+
+#### 11.系统调用和库函数
+![demo](photos/系统调用.png)
+
+malloc函数和sbrk函数调用
+![demo](photos/系统调用_2.png)
+
+C库函数和系统调用之间的差别
 
 
 
