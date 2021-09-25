@@ -14,6 +14,16 @@
       - [9.信号](#9信号)
       - [10.时间值](#10时间值)
       - [11.系统调用和库函数](#11系统调用和库函数)
+  - [第二章 UNIX标准及实现(此章先略过)](#第二章-unix标准及实现此章先略过)
+      - [1.UNIX标准化](#1unix标准化)
+      - [2.UNIX系统实现](#2unix系统实现)
+      - [3.标准与实现的关系](#3标准与实现的关系)
+  - [第三章 文件I/O](#第三章-文件io)
+      - [1.文件描述符](#1文件描述符)
+      - [2.函数open和openat](#2函数open和openat)
+      - [3.creat函数](#3creat函数)
+      - [4.close函数](#4close函数)
+      - [5.lseek函数](#5lseek函数)
 ## 第一章 UNIX基础知识
 
 #### 1.UNIX体系结构
@@ -217,6 +227,90 @@ malloc函数和sbrk函数调用
 
 C库函数和系统调用之间的差别
 
+## 第二章 UNIX标准及实现(此章先略过)
 
+#### 1.UNIX标准化
+```
+ISO c标准
+IEEE POSIX
+single UNIX Specification
+```
 
+#### 2.UNIX系统实现
+```
+SVR4
+4.4BSD
+FreeBSD
+Linux
+Mac OS X
+```
+#### 3.标准与实现的关系
+```
 
+```
+
+## 第三章 文件I/O
+
+#### 1.文件描述符
+```
+对于内核而言，所有打开的文件都通过文字描述符引用。当读写一个文件时，使用open或者creat返回的文件描述标识符标识该文件。将其作为参数传递给read或write。
+```
+
+#### 2.函数open和openat
+```c
+#include <fcntl.h>
+
+int open(const char *path, int oflag, ...);
+
+int openat(int fd, const char *path, int oflag, ...);
+```
+```
+fd参数把open和openat函数区分开来，有3种可能性
+1.path参数表示的是绝对路径。在这种情况下，fd参数被忽略此时的openat函数相当于open函数
+2.path参数指定的是相对路径名。fd参数指定了相对路径名在文件系统中的开始地址。fd参数是通过打开相对路径名所在的目录获取的。
+3.path参数指定的是相对路径名。fd参数指定了相对路径名在文件系统中的开始地址。fd参数是通过打开相对路径名所在的目录获取的。
+
+TOCTTOU错误
+```
+
+#### 3.creat函数
+```c
+#include <fcntl.h>
+
+int creat(const char *path, mode_t mode);
+1
+// 此函数等效于open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
+```
+```
+creat以只写方式打开创建的文件。
+可以用open(path, O_RDWR | O_CREAT | O_TRUNC, mode);来实现读写方式打开。
+```
+
+#### 4.close函数
+```c
+#include <fcntl.h>
+
+int close(int fd);
+```
+
+#### 5.lseek函数
+> 涉及到了当前文件偏移量
+```c
+#include <unistd.h>
+
+off_t lseek(int fd, off_t offset, int whence);
+```
+> 
+```c
+#include <apue.h>
+ 
+int main()
+{
+    if (lseek(STDIN_FILENO, 0, SEEK_CUR) == -1)   
+        printf("cannot seek\n");
+    else
+        printf("seek OK\n");
+    exit(0);
+}
+
+```
