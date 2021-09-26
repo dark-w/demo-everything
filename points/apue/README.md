@@ -24,6 +24,7 @@
       - [3.creat函数](#3creat函数)
       - [4.close函数](#4close函数)
       - [5.lseek函数](#5lseek函数)
+      - [6.函数read](#6函数read)
 ## 第一章 UNIX基础知识
 
 #### 1.UNIX体系结构
@@ -300,7 +301,7 @@ int close(int fd);
 
 off_t lseek(int fd, off_t offset, int whence);
 ```
-> 
+> 测试对其标准输入能否设置偏移量
 ```c
 #include <apue.h>
  
@@ -312,5 +313,34 @@ int main()
         printf("seek OK\n");
     exit(0);
 }
+```
+> 检验lseek
+```c
+#include <apue.h>
+#include <fcntl.h>
 
+char buf1[] = "abcdefghij";
+char buf2[] = "ABCDEFGHIJK";
+
+int main(void) 
+{
+    int fd;
+
+    if ((fd = creat("file.hole", FILE_MODE)) < 0)
+        err_sys("creat error");
+    if (write(fd, buf1, 10) != 10)
+        err_sys("buf1 write error");
+    if (lseek(fd, 16384, SEEK_SET) == -1)
+        err_sys("lseek error");
+    if (write(fd, buf2, 10) != 10)
+        err_sys("buf2 write error");
+    exit(0);
+}
+```
+
+#### 6.函数read
+```c
+#include <unistd.h>
+
+ssize_t read(int fd, void *buf, size_t nbytes);
 ```

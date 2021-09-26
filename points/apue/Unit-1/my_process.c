@@ -3,9 +3,9 @@
 
 int main()
 {
-    char    buf[MAXLINE];
-    pid_t   pid;
-    int     status;
+    char buf[MAXLINE];
+    pid_t pid;
+    int status;
 
     printf("%% ");
     while (fgets(buf, MAXLINE, stdin) != NULL) {    /* 标准输入获取 */

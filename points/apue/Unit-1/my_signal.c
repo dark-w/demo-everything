@@ -5,9 +5,9 @@ static void sig_int(int);
 
 int main()
 {
-    char    buf[MAXLINE];
-    pid_t   pid;
-    int     status;
+    char buf[MAXLINE];
+    pid_t pid;
+    int status;
 
     if (signal(SIGINT, sig_int) == SIG_ERR)
         err_sys("signal_err");
