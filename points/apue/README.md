@@ -25,6 +25,9 @@
       - [4.close函数](#4close函数)
       - [5.lseek函数](#5lseek函数)
       - [6.函数read](#6函数read)
+      - [7.函数write](#7函数write)
+      - [8.I/O的效率](#8io的效率)
+      - [9.文件共享](#9文件共享)
 ## 第一章 UNIX基础知识
 
 #### 1.UNIX体系结构
@@ -344,3 +347,19 @@ int main(void)
 
 ssize_t read(int fd, void *buf, size_t nbytes);
 ```
+
+#### 7.函数write
+```c
+#include <unistd.h>
+
+ssize_t write(int fd, const void*buf, size_t nbytes);
+```
+
+#### 8.I/O的效率
+> 缓冲区的长度影响了缓冲区的效率(到达4096之后，继续增加缓冲区长度对时间没有影响)
+
+#### 9.文件共享 
+> 
+```
+```
+
