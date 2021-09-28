@@ -28,6 +28,11 @@
       - [7.函数write](#7函数write)
       - [8.I/O的效率](#8io的效率)
       - [9.文件共享](#9文件共享)
+      - [10.原子操作](#10原子操作)
+      - [11.函数dup与函数dup2](#11函数dup与函数dup2)
+      - [12.函数sync、fsync、fdatasync](#12函数syncfsyncfdatasync)
+      - [13.函数fcntl](#13函数fcntl)
+      - [14.](#14)
 ## 第一章 UNIX基础知识
 
 #### 1.UNIX体系结构
@@ -359,7 +364,62 @@ ssize_t write(int fd, const void*buf, size_t nbytes);
 > 缓冲区的长度影响了缓冲区的效率(到达4096之后，继续增加缓冲区长度对时间没有影响)
 
 #### 9.文件共享 
-> 
 ```
+1.每一个进程，在进程表中都有一个记录项。记录项包含一个一张打开的文件描述符表。
+a.文件描述符标志
+b.指向一个文件表项的指针。
+2.内核为所有打开文件维持一张文件表。每个文件表项包含：
+a.文件状态标志
+b.当前文件偏移量
+c.指向该文件V节点表项的指针。
+3.每打开文件或者设备。都有一个v节点结构。
 ```
+
+#### 10.原子操作
+```c
+if (lseek(fd, OL, 2) < 0)
+    err_sys("lseek error");
+if (write(fd, buf, 100) != 100)
+    err_sys("write error");
+```
+> 多个进程同时使用这种方法将数据追加到同一文件，则会产生问题。
+```c
+#include <unistd.h>
+
+ssize_t pread(int fd, void *buf, size_t nbytes, off_t offset);
+ssize_t pwrite(int fd, const void *buf, size_t nbytes, off_t offset);
+```
+> 原子操作指的是多步组成的一个操作
+
+#### 11.函数dup与函数dup2
+```c
+#include <unistd.h>
+
+int dup(int fd);
+
+int dup2(int fd, int fd2);
+```
+> dup2是一个原子操作，而close与fcntl包含两个函数。
+> dup2和fcntl之间有不同的errno。
+
+#### 12.函数sync、fsync、fdatasync
+```c
+#include <unistd.h>
+
+int fsync(int fd);
+
+int fdatasync(int fd);
+
+void sync(void);
+```
+> 上面三个函数和缓冲区有关。详细看书。
+
+#### 13.函数fcntl
+> 改变已经打开的文件的属性。
+```c
+#include <unistd.h>
+
+int fcntl(int fd, int cmd, ...);
+```
+#### 14.
 
