@@ -25,6 +25,7 @@ for t in range(100):
     x.append(bn[0])
     y.append(bn[1])
 
+plt.plot([row[0] for row in controll_points], [row[1] for row in controll_points])
 plt.scatter(x, y)
 
 plt.xlabel('x-axis')
